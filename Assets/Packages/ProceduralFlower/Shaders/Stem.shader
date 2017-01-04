@@ -1,7 +1,6 @@
-﻿Shader "ProceduralFlower/Petal" {
+﻿Shader "ProceduralFlower/Stem" {
 	Properties {
 		_MainTex ("Texture", 2D) = "white" {}
-		_Cull ("Cull", Int) = 0.0 // Off
 	}
 
 	SubShader {
@@ -9,7 +8,6 @@
 		LOD 100
 
 		Pass {
-			Cull [_Cull]
 
 			CGPROGRAM
 			#pragma vertex vert

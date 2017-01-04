@@ -9,9 +9,7 @@ namespace mattatz.ProceduralFlower {
 
     public class ProceduralFlower : MonoBehaviour {
 
-        List<Vector3> points = new List<Vector3>();
         [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
-        [SerializeField] float size = 0.04f;
         [SerializeField] float c = 0.1f;
         [SerializeField] float n = 100;
         [SerializeField] GameObject petal;
@@ -23,7 +21,6 @@ namespace mattatz.ProceduralFlower {
             for(int i = 0; i < n; i++) {
                 var r = i * inv;
 
-                // points.Add(floret.Get(i, c));
                 var p = floret.Get(i + 1, c);
 
                 var go = Instantiate(petal) as GameObject;
@@ -38,12 +35,6 @@ namespace mattatz.ProceduralFlower {
         }
 
         void OnDrawGizmos () {
-            Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.color = Color.yellow;
-            points.ForEach(p => {
-                Gizmos.DrawSphere(p, size);
-            });
-
         }
 
     }

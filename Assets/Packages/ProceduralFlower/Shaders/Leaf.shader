@@ -1,4 +1,4 @@
-﻿Shader "ProceduralFlower/Petal" {
+﻿Shader "ProceduralFlower/Leaf" {
 	Properties {
 		_MainTex ("Texture", 2D) = "white" {}
 		_Cull ("Cull", Int) = 0.0 // Off
@@ -42,8 +42,7 @@
 			
 			fixed4 frag (v2f i) : SV_Target {
 				fixed4 col = tex2D(_MainTex, i.uv);
-				col = fixed4((normalize(i.normal) + 1.0) * 0.5, 1.0);
-				// col = fixed4(abs(i.uv.x), i.uv.y, 0, 1.0);
+				col = fixed4(abs(i.uv.x), i.uv.y, 0, 1.0);
 				return col;
 			}
 
