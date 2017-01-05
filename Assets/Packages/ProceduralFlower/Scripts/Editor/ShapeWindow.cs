@@ -15,7 +15,9 @@ namespace mattatz.ProceduralFlower {
 			Select
 		};
 
-		static Texture grid;
+		Texture grid;
+		Texture knob;
+
 		static Vector2 size = new Vector2(512f, 512f);
 		const float unit = 20f;
 
@@ -26,10 +28,11 @@ namespace mattatz.ProceduralFlower {
 		Shape shape;
 
 		[MenuItem("ProceduralFlower/Window")]
-		static void Open () {
+		public static void Open () {
 			var window = GetWindow<ShapeWindow>(typeof(SceneView));
 			var icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Packages/ProceduralFlower/Gizmos/Shape Icon.png");
 			window.titleContent = new GUIContent("PF", icon);
+			window.Focus();
 		}
 
 		void Update () {
@@ -47,7 +50,11 @@ namespace mattatz.ProceduralFlower {
 			}
 
 			if(grid == null) {
-				grid = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Packages/ProceduralFlower/Textures/Grid.png");
+				grid = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Packages/ProceduralFlower/Textures/Grid.jpg");
+			}
+
+			if(knob == null) {
+				knob = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Packages/ProceduralFlower/Textures/Knob.png");
 			}
 
 			if(points == null) {
@@ -197,7 +204,10 @@ namespace mattatz.ProceduralFlower {
 
 		void OnGUI () {
 			CheckInit();
+
 			GUI.DrawTexture(new Rect(0f, 0f, size.x, size.y), grid);
+			DrawHeader();
+			CatchEvent();
 
 			for(int i = 0, n = points.Count; i < n; i++) {
 				if(i == selected) {
@@ -206,7 +216,7 @@ namespace mattatz.ProceduralFlower {
 					GUI.color = Color.white;
 				}
 				var p = points[i];
-				GUI.Box(new Rect(Vector2.Scale(p, size) - new Vector2(unit, unit) * 0.5f, new Vector2(unit, unit)), "");
+				GUI.DrawTexture(new Rect(Vector2.Scale(p, size) - new Vector2(unit, unit) * 0.5f, new Vector2(unit, unit)), knob);
 			}
 			GUI.color = Color.white;
 
@@ -219,8 +229,6 @@ namespace mattatz.ProceduralFlower {
 				DrawShape(mirror, points.Count);
 			}
 
-			DrawHeader();
-			CatchEvent();
 		}
 
 	}

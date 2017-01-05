@@ -17,6 +17,10 @@ namespace mattatz.ProceduralFlower {
 
 		public override void OnInspectorGUI () {
 			base.OnInspectorGUI();
+
+			if(GUILayout.Button("Open Editor")) {
+				ShapeWindow.Open();
+			}
 		}
 
 	}

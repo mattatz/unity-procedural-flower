@@ -6,13 +6,7 @@ using UnityEngine;
 
 namespace mattatz.ProceduralFlower {
 
-	public class Segment {
-		public float length;
-		public int depth;
-		public Segment () {
-		}
-	}
-
+	[ExecuteInEditMode]
 	public class Stem : MonoBehaviour {
 
 		[SerializeField] List<Vector3> controls;
@@ -20,14 +14,14 @@ namespace mattatz.ProceduralFlower {
 		[SerializeField] int hresolution = 4;
 		[SerializeField] float radius = 0.02f;
 
-		void Awake() {
+		void Start() {
 			GetComponent<MeshFilter>().sharedMesh = Build(controls, wresolution, hresolution, radius);
 		}
 
-		Mesh Build (List<Vector3> points, int wresolution = 10, int hresolution = 4, float radius = 0.05f) {
-			var segments = new List<Segment>();
-
+		Mesh Build (List<Vector3> controls, int wresolution = 10, int hresolution = 4, float radius = 0.05f) {
 			var cores = new List<Vector3>();
+
+			controls = controls.ToList();
 
 			Vector3 first = controls[0], second = controls[1];
 			Vector3 blast = controls[controls.Count - 2], last = controls[controls.Count - 1];

@@ -10,11 +10,11 @@ namespace mattatz.ProceduralFlower {
 
     public class ProceduralFlower : MonoBehaviour {
 
-        [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
+        // [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
         [SerializeField] float c = 0.1f;
         [SerializeField] float n = 100;
 
-		[SerializeField] PetalData petal;
+		[SerializeField] PetalData data;
 
 		[System.Serializable]
 		class PetalData {
@@ -22,10 +22,18 @@ namespace mattatz.ProceduralFlower {
 			public Material material;
 		}
 
+		GameObject CreatePetal(PetalData data) {
+			var mesh = data.petal.Build();
+			var go = new GameObject("Petal");
+			go.AddComponent<MeshFilter>().mesh = mesh;
+			go.AddComponent<MeshRenderer>().material = data.material;
+			return go;
+		}
+
         void Start () {
             var floret = new Florets();
 
-			var mesh = petal.petal.Build();
+			var source = CreatePetal(data);
 
             var inv = 1f / n;
             for(int i = 0; i < n; i++) {
@@ -33,21 +41,16 @@ namespace mattatz.ProceduralFlower {
 
                 var p = floret.Get(i + 1, c);
 
-				var go = CreatePetal(mesh);
+				var go = Instantiate(source);
                 go.transform.SetParent(transform, false);
                 // go.transform.localScale = Vector3.one * Mathf.Clamp01(r + 0.1f);
                 go.transform.localScale = Vector3.one * Mathf.Clamp01(p.magnitude + 0.1f);
                 go.transform.localPosition = p + Vector3.up * (1f - r) * 0.25f;
                 go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r) * 60f + 1f, Vector3.right);
             }
-        }
 
-		GameObject CreatePetal (Mesh mesh) {
-			var go = new GameObject("Petal");
-			go.AddComponent<MeshFilter>().mesh = mesh;
-			go.AddComponent<MeshRenderer>().material = petal.material;
-			return go;
-		}
+			Destroy(source);
+        }
 
     }
 

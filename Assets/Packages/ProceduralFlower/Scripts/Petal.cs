@@ -40,13 +40,14 @@ namespace mattatz.ProceduralFlower {
 			points.AddRange(controls.Select(p => new Vector3(p.width * width, p.height * height, 0f)));
 			points.Add(top);
 
-			controls.Reverse();
-			points.AddRange(controls.Select(p => new Vector3(-p.width * width, p.height * height, 0f)));
+			var reverse = controls.ToList();
+			reverse.Reverse();
+			points.AddRange(reverse.Select(p => new Vector3(-p.width * width, p.height * height, 0f)));
 
 			return points;
 		}
 
-		public static Mesh Build (float size, List<ControlPoint> controls, int numberOfVerticesOnOneSide = 20, int resolution = 2, float depth = 0.25f, Vector2 scale = default(Vector2)) {
+		public static Mesh Build (float size, List<ControlPoint> controls, int numberOfVerticesOnOneSide = 20, int resolution = 2, float depth = 0.25f, Vector2 noiseScale = default(Vector2), Vector2 noiseOffset = default(Vector2)) {
             var mesh = new Mesh();
 
 			resolution = Mathf.Max(1, resolution);
@@ -70,8 +71,9 @@ namespace mattatz.ProceduralFlower {
 			points.AddRange(controls.Select(p => new Vector3(p.width * size, p.height * size, 0f)));
 			points.Add(top);
 
-			controls.Reverse();
-			points.AddRange(controls.Select(p => new Vector3(-p.width * size, p.height * size, 0f)));
+			var reverse = controls.ToList();
+			reverse.Reverse();
+			points.AddRange(reverse.Select(p => new Vector3(-p.width * size, p.height * size, 0f)));
 
 			var vertices = new List<Vector3>();
 			var uv = new List<Vector2>();
@@ -155,9 +157,9 @@ namespace mattatz.ProceduralFlower {
 				}
 			}
 
-			var noiseOffset = new Vector2(size, size);
+			var noffset = noiseOffset + new Vector2(size, size);
 			mesh.vertices = vertices.Select(v => {
-				return new Vector3(v.x, v.y, depth * Depth(v, noiseOffset, scale));
+				return new Vector3(v.x, v.y, depth * Depth(v, noffset, noiseScale));
 			}).ToArray();
 			mesh.uv = uv.ToArray();
 			mesh.triangles = triangles.ToArray();
