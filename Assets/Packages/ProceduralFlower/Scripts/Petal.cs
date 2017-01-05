@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace mattatz.ProceduralFlower {
 
+	[System.Serializable]
 	public class ControlPoint {
 		public float width;
 		public float height;
@@ -16,33 +17,42 @@ namespace mattatz.ProceduralFlower {
 		}
 	}
 
-    public class Petal {
+	[CreateAssetMenu(menuName = "ProceduralFlower/Petal")]
+    public class Petal : ScriptableObject {
 
-		public float height = 1f;
-		public float width = 0.5f;
-		public List<ControlPoint> controls;
+		public float size = 1f;
 		public int numberOfVerticesOnOneSide = 20;
 		public int resolution = 2;
 		public float depth = 0.25f;
 		public Vector2 scale = Vector2.zero;
+		public Shape shape;
 
 		public Mesh Build () {
-			return Build(height, width, controls, numberOfVerticesOnOneSide, resolution, depth, scale);
+			return Build(size, shape.controls, numberOfVerticesOnOneSide, resolution, depth, scale);
 		}
 
-		public static Mesh Build (float height, float width, List<ControlPoint> controls, int numberOfVerticesOnOneSide = 20, int resolution = 2, float depth = 0.25f, Vector2 scale = default(Vector2)) {
+		public static List<Vector3> Mirror (List<ControlPoint> controls, float height, float width) {
+			var bottom = new Vector3(0f, 0f, 0f);
+            var top = new Vector3(0f, height, 0f);
+
+			var points = new List<Vector3>();
+			points.Add(bottom);
+			points.AddRange(controls.Select(p => new Vector3(p.width * width, p.height * height, 0f)));
+			points.Add(top);
+
+			controls.Reverse();
+			points.AddRange(controls.Select(p => new Vector3(-p.width * width, p.height * height, 0f)));
+
+			return points;
+		}
+
+		public static Mesh Build (float size, List<ControlPoint> controls, int numberOfVerticesOnOneSide = 20, int resolution = 2, float depth = 0.25f, Vector2 scale = default(Vector2)) {
             var mesh = new Mesh();
 
 			resolution = Mathf.Max(1, resolution);
 
-			/*
-			var controls = new List<ControlPoint>();
-			controls.Add(new ControlPoint(0.35f, 0.35f));
-			controls.Add(new ControlPoint(0.75f, 0.80f));
-			*/
-
 			if(controls.Count < 1) {
-				new UnityException("control points size is not enough");
+				throw new UnityException("control points size is not enough");
 			}
 
 			int controlSize = controls.Count;
@@ -53,15 +63,15 @@ namespace mattatz.ProceduralFlower {
 			});
 
             var bottom = new Vector3(0f, 0f, 0f);
-            var top = new Vector3(0f, height, 0f);
+            var top = new Vector3(0f, size, 0f);
 
 			var points = new List<Vector3>();
 			points.Add(bottom);
-			points.AddRange(controls.Select(p => new Vector3(p.width * width, p.height * height, 0f)));
+			points.AddRange(controls.Select(p => new Vector3(p.width * size, p.height * size, 0f)));
 			points.Add(top);
 
 			controls.Reverse();
-			points.AddRange(controls.Select(p => new Vector3(-p.width * width, p.height * height, 0f)));
+			points.AddRange(controls.Select(p => new Vector3(-p.width * size, p.height * size, 0f)));
 
 			var vertices = new List<Vector3>();
 			var uv = new List<Vector2>();
@@ -79,7 +89,7 @@ namespace mattatz.ProceduralFlower {
 					);
 					vertices.AddRange(edge);
 					uv.AddRange(edge.Select(v => {
-						return new Vector2(v.x / width, v.y / height);
+						return new Vector2(v.x / size, v.y / size);
 					}));
 				}
 			}
@@ -95,7 +105,7 @@ namespace mattatz.ProceduralFlower {
 				);
 				vertices.AddRange(edge);
 				uv.AddRange(edge.Select(v => {
-					return new Vector2(0f, v.y / height);
+					return new Vector2(0f, v.y / size);
 				}));
 			}
 
@@ -112,7 +122,7 @@ namespace mattatz.ProceduralFlower {
 					);
 					vertices.AddRange(edge);
 					uv.AddRange(edge.Select(v => {
-						return new Vector2(v.x / width, v.y / height);
+						return new Vector2(v.x / size, v.y / size);
 					}));
 				}
 			}
@@ -145,7 +155,7 @@ namespace mattatz.ProceduralFlower {
 				}
 			}
 
-			var noiseOffset = new Vector2(width, height);
+			var noiseOffset = new Vector2(size, size);
 			mesh.vertices = vertices.Select(v => {
 				return new Vector3(v.x, v.y, depth * Depth(v, noiseOffset, scale));
 			}).ToArray();
@@ -185,7 +195,7 @@ namespace mattatz.ProceduralFlower {
 			return new Vector2(p.x * ratio, p.y);
 		}
 
-		static Vector2 GetLoopPoint (List<Vector3> points, int index) {
+		public static Vector2 GetLoopPoint (List<Vector3> points, int index) {
 			if(index < 0) {
 				return GetLoopPoint(points, points.Count + index);
 			} else if(index >= points.Count) {

@@ -7,15 +7,25 @@ using System.Collections.Generic;
 
 namespace mattatz.ProceduralFlower {
 
+
     public class ProceduralFlower : MonoBehaviour {
 
         [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
         [SerializeField] float c = 0.1f;
         [SerializeField] float n = 100;
-        [SerializeField] GameObject petal;
+
+		[SerializeField] PetalData petal;
+
+		[System.Serializable]
+		class PetalData {
+			public Petal petal;
+			public Material material;
+		}
 
         void Start () {
             var floret = new Florets();
+
+			var mesh = petal.petal.Build();
 
             var inv = 1f / n;
             for(int i = 0; i < n; i++) {
@@ -23,19 +33,21 @@ namespace mattatz.ProceduralFlower {
 
                 var p = floret.Get(i + 1, c);
 
-                var go = Instantiate(petal) as GameObject;
+				var go = CreatePetal(mesh);
                 go.transform.SetParent(transform, false);
                 // go.transform.localScale = Vector3.one * Mathf.Clamp01(r + 0.1f);
                 go.transform.localScale = Vector3.one * Mathf.Clamp01(p.magnitude + 0.1f);
                 go.transform.localPosition = p + Vector3.up * (1f - r) * 0.25f;
                 go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r) * 60f + 1f, Vector3.right);
             }
-
-            petal.SetActive(false);
         }
 
-        void OnDrawGizmos () {
-        }
+		GameObject CreatePetal (Mesh mesh) {
+			var go = new GameObject("Petal");
+			go.AddComponent<MeshFilter>().mesh = mesh;
+			go.AddComponent<MeshRenderer>().material = petal.material;
+			return go;
+		}
 
     }
 
