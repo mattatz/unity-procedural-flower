@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Random = UnityEngine.Random;
 
 using System;
 using System.Linq;
@@ -7,33 +8,77 @@ using System.Collections.Generic;
 
 namespace mattatz.ProceduralFlower {
 
-
     public class ProceduralFlower : MonoBehaviour {
+
+		[SerializeField] ShapeData petalData;
+		[SerializeField] ShapeData leafData;
+		[SerializeField] StemData stemData;
 
         // [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
         [SerializeField] float c = 0.1f;
         [SerializeField] float n = 100;
 
-		[SerializeField] PetalData petal;
+		[SerializeField] float height = 2f;
+		[SerializeField] int leafCount = 3;
 
 		[System.Serializable]
-		class PetalData {
-			public Shape shape;
+		class ShapeData {
+			[SerializeField] Shape shape;
 			public Material material;
+			[HideInInspector] public Mesh mesh;
+
+			public void Init () {
+				mesh = shape.Build();
+			}
 		}
 
-		GameObject CreatePetal(PetalData data) {
-			var mesh = data.shape.Build();
-			var go = new GameObject("Petal");
-			go.AddComponent<MeshFilter>().mesh = mesh;
+		[System.Serializable]
+		class StemData {
+			[HideInInspector] public Stem stem;
+
+			public Material material;
+			[SerializeField] int wresolution = 10;
+			[SerializeField] int hresolution = 6;
+			[SerializeField] float radius = 0.02f;
+			public float bend = 0.05f;
+
+			public void Init () {
+				stem = new Stem(wresolution, hresolution, radius);
+			}
+
+		}
+
+        void Start () {
+			petalData.Init();
+			leafData.Init();
+			stemData.Init();
+
+			CreateStem(stemData.stem, (float r) => 1f, height, stemData.bend);
+
+			var segments = stemData.stem.Segments;
+			var hs = Mathf.FloorToInt(segments.Count * 0.7f);
+			for(int i = 0; i < leafCount; i++) {
+				CreateLeaf(segments[Random.Range(0, hs)]);
+			}
+
+			var flower = CreateFlower();
+			flower.transform.localPosition = stemData.stem.Tip.position;
+			flower.transform.localRotation *= stemData.stem.Tip.rotation * Quaternion.FromToRotation(Vector3.back, Vector3.up);
+        }
+
+		GameObject Create(ShapeData data, string name) {
+			var go = new GameObject(name);
+			go.AddComponent<MeshFilter>().mesh = data.mesh;
 			go.AddComponent<MeshRenderer>().material = data.material;
 			return go;
 		}
 
-        void Start () {
+		GameObject CreateFlower () {
             var floret = new Florets();
+			var source = Create(petalData, "Petal");
 
-			var source = CreatePetal(petal);
+			var flower = new GameObject("Flower");
+			flower.transform.SetParent(transform, false);
 
             var inv = 1f / n;
             for(int i = 0; i < n; i++) {
@@ -42,7 +87,7 @@ namespace mattatz.ProceduralFlower {
                 var p = floret.Get(i + 1, c);
 
 				var go = Instantiate(source);
-                go.transform.SetParent(transform, false);
+                go.transform.SetParent(flower.transform, false);
                 // go.transform.localScale = Vector3.one * Mathf.Clamp01(r + 0.1f);
                 go.transform.localScale = Vector3.one * Mathf.Clamp01(p.magnitude + 0.1f);
                 go.transform.localPosition = p + Vector3.up * (1f - r) * 0.25f;
@@ -50,7 +95,42 @@ namespace mattatz.ProceduralFlower {
             }
 
 			Destroy(source);
-        }
+
+			return flower;
+		}
+
+		GameObject CreateStem(Stem stem, Func<float, float> f, float height, float bend) {
+			var controls = GetControls(4, height, bend);
+			var mesh = stem.Build(controls, f);
+			var go = new GameObject("Stem");
+			go.transform.SetParent(transform, false);
+			go.AddComponent<MeshFilter>().sharedMesh = mesh;
+			go.AddComponent<MeshRenderer>().sharedMaterial = stemData.material;
+			return go;
+		}
+
+		void CreateLeaf (Point segment) {
+			var stem = new Stem(10, 2, 0.01f);
+			var go = CreateStem(stem, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
+			go.transform.localPosition = segment.position;
+			go.transform.localRotation *= segment.rotation;
+
+			var leaf = Create(leafData, "Leaf");
+			leaf.transform.SetParent(go.transform, false);
+			leaf.transform.localPosition = stem.Tip.position;
+			leaf.transform.localRotation *= Quaternion.AngleAxis(Random.Range(-45f, 45f), Vector3.up);
+		}
+
+		List<Vector3> GetControls (int count, float height, float radius) {
+			var controls = new List<Vector3>();
+			count = Mathf.Max(4, count);
+			for(int i = 0; i < count; i++) {
+				var r = (float)i / (count - 1);
+				var circle = Random.insideUnitCircle * radius;
+				controls.Add(new Vector3(circle.x, r * height, circle.y));
+			}
+			return controls;
+		}
 
     }
 

@@ -149,7 +149,7 @@ namespace mattatz.ProceduralFlower {
 
 			var noffset = noiseOffset + new Vector2(size, size);
 			mesh.vertices = vertices.Select(v => {
-				return new Vector3(v.x, v.y, depth * Depth(v, noffset, noiseScale));
+				return new Vector3(v.x, v.y, v.y * depth * Depth(v, noffset, noiseScale));
 			}).ToArray();
 			mesh.uv = uv.ToArray();
 			mesh.triangles = triangles.ToArray();
@@ -163,7 +163,6 @@ namespace mattatz.ProceduralFlower {
 			var controlSize = controls.Count;
 
 			var points = controls.Select(c => new Vector2(c.width, c.height)).ToList();
-			var counts = new float[controlSize + 1];
 
 			var acc = 0f;
 			var lengthes = new float[controlSize + 1];
@@ -197,7 +196,7 @@ namespace mattatz.ProceduralFlower {
 		}
 
 		static float Depth (Vector3 v, Vector2 offset, Vector2 scale) {
-			return Mathf.PerlinNoise((v.x + offset.x) * scale.x, (v.y + offset.y) * scale.y);
+			return Mathf.PerlinNoise((v.x + offset.x) * scale.x, (v.y + offset.y) * scale.y) - 0.5f;
 		}
 
 

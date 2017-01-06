@@ -1,27 +1,54 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace mattatz.ProceduralFlower {
 
-	[ExecuteInEditMode]
-	public class Stem : MonoBehaviour {
+	public class Point {
+		public Vector3 position;
+		public Quaternion rotation;
+		public Point (Vector3 p, Quaternion r) {
+			position = p;
+			rotation = r;
+		}
+	}
 
-		[SerializeField] List<Vector3> controls;
-		[SerializeField] int wresolution = 10;
-		[SerializeField] int hresolution = 4;
-		[SerializeField] float radius = 0.02f;
+	public class Stem {
 
-		void Start() {
-			GetComponent<MeshFilter>().sharedMesh = Build(controls, wresolution, hresolution, radius);
+		public Point Tip { get { return tip; } }
+		public List<Point> Segments { get { return segments; } }
+
+		public int wresolution = 10;
+		public int hresolution = 4;
+		public float radius = 0.05f;
+
+		Point tip;
+		List<Point> segments;
+
+		public Stem () {}
+
+		public Stem (int wresol, int hresol, float r) {
+			wresolution = wresol;
+			hresolution = hresol;
+			radius = r;
 		}
 
-		Mesh Build (List<Vector3> controls, int wresolution = 10, int hresolution = 4, float radius = 0.05f) {
+		public Mesh Build (List<Vector3> controls) {
+			return Build(controls, wresolution, hresolution, radius, (float r) => 1f);
+		}
+
+		public Mesh Build (List<Vector3> controls, Func<float, float> f) {
+			return Build(controls, wresolution, hresolution, radius, f);
+		}
+
+		Mesh Build (List<Vector3> controls, int wresolution, int hresolution, float radius, Func<float, float> f) {
 
 			controls = controls.ToList();
-			if(controls.Count <= 4) {
+			if(controls.Count < 4) {
 				throw new UnityException("control size is not enough");
 			}
 
@@ -58,6 +85,8 @@ namespace mattatz.ProceduralFlower {
 			Vector3 right = Vector3.right;
 			bool inverse = false;
 
+			segments = new List<Point>();
+
 			for(int i = 0, n = cores.Count; i < n; i++) {
 				var core = cores[i];
 				var v = (float)i / (n - 1);
@@ -83,7 +112,8 @@ namespace mattatz.ProceduralFlower {
 					var cr = (Quaternion.LookRotation(dir) * Vector3.right).normalized;
 					if(Vector3.Dot(right, cr) < 0f) inverse = !inverse;
 
-					AddCircle(vertices, core, circle, dir, inverse);
+					var rotation = AddCircle(vertices, core, circle, f(v), dir, inverse);
+					segments.Add(new Point(core, rotation));
 
 					right = cr;
 
@@ -106,7 +136,8 @@ namespace mattatz.ProceduralFlower {
 					var cr = (Quaternion.LookRotation(dir) * Vector3.right).normalized;
 					if(Vector3.Dot(right, cr) < 0f) inverse = !inverse;
 
-					AddCircle(vertices, core, circle, dir, inverse);
+					var rotation = AddCircle(vertices, core, circle, f(v), dir, inverse);
+					tip = new Point(core, rotation);
 
 					vertices.Add(cores.Last());
 					uv.Add(new Vector2(0.5f, 1f));
@@ -134,17 +165,20 @@ namespace mattatz.ProceduralFlower {
 			return mesh;
 		}
 
-		void AddCircle (List<Vector3> vertices, Vector3 core, List<Vector3> circle, Vector3 dir, bool inverse) {
+		static Quaternion AddCircle (List<Vector3> vertices, Vector3 core, List<Vector3> circle, float radius, Vector3 dir, bool inverse) {
+			Quaternion q;
 			if(inverse) {
-				var q = Quaternion.AngleAxis(180f, dir) * Quaternion.LookRotation(dir);
+				q = Quaternion.AngleAxis(180f, dir) * Quaternion.LookRotation(dir);
 				circle.ForEach(c => {
-					vertices.Add(core + q * c);
+					vertices.Add(core + q * (c * radius));
 				});
 			} else {
+				q = Quaternion.LookRotation(dir);
 				circle.ForEach(c => {
-					vertices.Add(core + Quaternion.LookRotation(dir) * c);
+					vertices.Add(core + q * (c * radius));
 				});
 			}
+			return q;
 		}
 
 	}
