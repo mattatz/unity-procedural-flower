@@ -100,10 +100,10 @@ namespace mattatz.ProceduralFlower {
 			for(int i = 0; i <= count; i++) {
 				var edge = CatmullRomSpline.GetCatmullRomPositions(
 					resolution, 
-					Petal.GetLoopPoint(mirror, i - 1),
-					Petal.GetLoopPoint(mirror, i),
-					Petal.GetLoopPoint(mirror, i + 1),
-					Petal.GetLoopPoint(mirror, i + 2)
+					Shape.GetLoopPoint(mirror, i - 1),
+					Shape.GetLoopPoint(mirror, i),
+					Shape.GetLoopPoint(mirror, i + 1),
+					Shape.GetLoopPoint(mirror, i + 2)
 				);
 				if(i != 0) edge.RemoveAt(0);
 				points.AddRange(edge);
@@ -224,7 +224,7 @@ namespace mattatz.ProceduralFlower {
 			// GUI.Box(new Rect(new Vector2((size.x - unit) * 0.5f, size.y - unit), new Vector2(unit, unit)), "bottom");
 
 			if(points.Count >= 2) {
-				var mirror = Petal.Mirror(GetControls(points), size.y, size.x);
+				var mirror = Shape.Mirror(GetControls(points), size.y, size.x);
 				Handles.color = Color.black;
 				DrawShape(mirror, points.Count);
 			}

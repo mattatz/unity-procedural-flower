@@ -19,9 +19,11 @@ namespace mattatz.ProceduralFlower {
 		}
 
 		Mesh Build (List<Vector3> controls, int wresolution = 10, int hresolution = 4, float radius = 0.05f) {
-			var cores = new List<Vector3>();
 
 			controls = controls.ToList();
+			if(controls.Count <= 4) {
+				throw new UnityException("control size is not enough");
+			}
 
 			Vector3 first = controls[0], second = controls[1];
 			Vector3 blast = controls[controls.Count - 2], last = controls[controls.Count - 1];
@@ -29,6 +31,7 @@ namespace mattatz.ProceduralFlower {
 			controls.Insert(0, first + (first - second).normalized * 0.25f);
 			controls.Add(last + (last - blast).normalized * 0.25f);
 
+			var cores = new List<Vector3>();
 			for(int i = 1, n = controls.Count - 2; i < n; i++) {
 				var tmp = CatmullRomSpline.GetCatmullRomPositions(hresolution, controls[i - 1], controls[i], controls[i + 1], controls[i + 2]);
 				if(i != 1) {

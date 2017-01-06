@@ -14,16 +14,16 @@ namespace mattatz.ProceduralFlower {
         [SerializeField] float c = 0.1f;
         [SerializeField] float n = 100;
 
-		[SerializeField] PetalData data;
+		[SerializeField] PetalData petal;
 
 		[System.Serializable]
 		class PetalData {
-			public Petal petal;
+			public Shape shape;
 			public Material material;
 		}
 
 		GameObject CreatePetal(PetalData data) {
-			var mesh = data.petal.Build();
+			var mesh = data.shape.Build();
 			var go = new GameObject("Petal");
 			go.AddComponent<MeshFilter>().mesh = mesh;
 			go.AddComponent<MeshRenderer>().material = data.material;
@@ -33,7 +33,7 @@ namespace mattatz.ProceduralFlower {
         void Start () {
             var floret = new Florets();
 
-			var source = CreatePetal(data);
+			var source = CreatePetal(petal);
 
             var inv = 1f / n;
             for(int i = 0; i < n; i++) {
