@@ -56,9 +56,14 @@ namespace mattatz.ProceduralFlower {
 			CreateStem(stemData.stem, (float r) => 1f, height, stemData.bend);
 
 			var segments = stemData.stem.Segments;
-			var hs = Mathf.FloorToInt(segments.Count * 0.7f);
+			var offset = 3;
+			var hs = offset + Mathf.FloorToInt(segments.Count * 0.5f);
 			for(int i = 0; i < leafCount; i++) {
-				CreateLeaf(segments[Random.Range(0, hs)]);
+				var index = Random.Range(0, hs);
+				var from = segments[index];
+				var to = segments[index + 1];
+				var dir = (to.position - from.position).normalized;
+				CreateLeaf(segments[Random.Range(offset, hs)], dir, i % 4 * 60f);
 			}
 
 			var flower = CreateFlower();
@@ -109,16 +114,17 @@ namespace mattatz.ProceduralFlower {
 			return go;
 		}
 
-		void CreateLeaf (Point segment) {
+		void CreateLeaf (Point segment, Vector3 dir, float angle) {
 			var stem = new Stem(10, 2, 0.01f);
 			var go = CreateStem(stem, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
 			go.transform.localPosition = segment.position;
-			go.transform.localRotation *= segment.rotation;
+			go.transform.localScale *= Random.Range(0.55f, 1f);
+			go.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
 
 			var leaf = Create(leafData, "Leaf");
 			leaf.transform.SetParent(go.transform, false);
 			leaf.transform.localPosition = stem.Tip.position;
-			leaf.transform.localRotation *= Quaternion.AngleAxis(Random.Range(-45f, 45f), Vector3.up);
+			leaf.transform.localRotation *= Quaternion.AngleAxis(Random.Range(0f, 30f), Vector3.up);
 		}
 
 		List<Vector3> GetControls (int count, float height, float radius) {
