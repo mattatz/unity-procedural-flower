@@ -8,6 +8,7 @@ using System.Collections.Generic;
 
 namespace mattatz.ProceduralFlower {
 
+	[ExecuteInEditMode]
     public class ProceduralFlower : MonoBehaviour {
 
 		[SerializeField] ShapeData petalData;
@@ -15,11 +16,13 @@ namespace mattatz.ProceduralFlower {
 		[SerializeField] StemData stemData;
 
         // [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
-        [SerializeField] float c = 0.1f;
-        [SerializeField] float n = 100;
+        [HideInInspector] public float c = 0.1f;
+        [HideInInspector] public int n = 75;
 
-		[SerializeField] float height = 2f;
-		[SerializeField] int leafCount = 3;
+		[HideInInspector] public float height = 2f;
+		[HideInInspector] public int leafCount = 3;
+
+		[SerializeField] List<GameObject> children;
 
 		[System.Serializable]
 		class ShapeData {
@@ -45,15 +48,32 @@ namespace mattatz.ProceduralFlower {
 			public void Init () {
 				stem = new Stem(wresolution, hresolution, radius);
 			}
-
 		}
 
         void Start () {
+			Build();
+        }
+
+		public void Build () {
+			if(children == null) {
+				children = new List<GameObject>();
+			} else {
+				children.ForEach(child => {
+					if(Application.isPlaying) {
+						Destroy(child);
+					} else {
+						DestroyImmediate(child);
+					}
+				});
+				children.Clear();
+			}
+
 			petalData.Init();
 			leafData.Init();
 			stemData.Init();
 
-			CreateStem(stemData.stem, (float r) => 1f, height, stemData.bend);
+			var stem = CreateStem(stemData.stem, (float r) => 1f, height, stemData.bend);
+			children.Add(stem);
 
 			var segments = stemData.stem.Segments;
 			var offset = 3;
@@ -63,13 +83,16 @@ namespace mattatz.ProceduralFlower {
 				var from = segments[index];
 				var to = segments[index + 1];
 				var dir = (to.position - from.position).normalized;
-				CreateLeaf(segments[Random.Range(offset, hs)], dir, i % 4 * 60f);
+				var leaf = CreateLeaf(segments[Random.Range(offset, hs)], dir, i % 4 * 60f);
+				children.Add(leaf);
 			}
 
 			var flower = CreateFlower();
 			flower.transform.localPosition = stemData.stem.Tip.position;
 			flower.transform.localRotation *= stemData.stem.Tip.rotation * Quaternion.FromToRotation(Vector3.back, Vector3.up);
-        }
+
+			children.Add(flower);
+		}
 
 		GameObject Create(ShapeData data, string name) {
 			var go = new GameObject(name);
@@ -99,7 +122,11 @@ namespace mattatz.ProceduralFlower {
                 go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r) * 60f + 1f, Vector3.right);
             }
 
-			Destroy(source);
+			if(Application.isPlaying) {
+				Destroy(source);
+			} else {
+				DestroyImmediate(source);
+			}
 
 			return flower;
 		}
@@ -114,7 +141,7 @@ namespace mattatz.ProceduralFlower {
 			return go;
 		}
 
-		void CreateLeaf (Point segment, Vector3 dir, float angle) {
+		GameObject CreateLeaf (Point segment, Vector3 dir, float angle) {
 			var stem = new Stem(10, 2, 0.01f);
 			var go = CreateStem(stem, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
 			go.transform.localPosition = segment.position;
@@ -125,6 +152,8 @@ namespace mattatz.ProceduralFlower {
 			leaf.transform.SetParent(go.transform, false);
 			leaf.transform.localPosition = stem.Tip.position;
 			leaf.transform.localRotation *= Quaternion.AngleAxis(Random.Range(0f, 30f), Vector3.up);
+
+			return go;
 		}
 
 		List<Vector3> GetControls (int count, float height, float radius) {
