@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Random = UnityEngine.Random;
 
 using System;
 using System.Linq;
@@ -21,6 +20,10 @@ namespace mattatz.ProceduralFlower {
 
 		[HideInInspector] public float height = 2f;
 		[HideInInspector] public int leafCount = 3;
+
+        [SerializeField] int seed = 0;
+
+        Rand rand;
 
 		[SerializeField] List<GameObject> children;
 
@@ -55,6 +58,8 @@ namespace mattatz.ProceduralFlower {
         }
 
 		public void Build () {
+            rand = new Rand(seed);
+
 			if(children == null) {
 				children = new List<GameObject>();
 			} else {
@@ -78,12 +83,13 @@ namespace mattatz.ProceduralFlower {
 			var segments = stemData.stem.Segments;
 			var offset = 3;
 			var hs = offset + Mathf.FloorToInt(segments.Count * 0.5f);
-			for(int i = 0; i < leafCount; i++) {
-				var index = Random.Range(0, hs);
+            for (int i = 0; i < leafCount; i++) {
+                int index = rand.SampleRange(0, hs);
 				var from = segments[index];
 				var to = segments[index + 1];
 				var dir = (to.position - from.position).normalized;
-				var leaf = CreateLeaf(segments[Random.Range(offset, hs)], dir, i % 4 * 60f);
+				// var leaf = CreateLeaf(segments[rand.Range(offset, hs)], dir, i % 4 * 60f);
+				var leaf = CreateLeaf(segments[rand.SampleRange(hs, offset)], dir, i % 4 * 60f);
 				children.Add(leaf);
 			}
 
@@ -145,13 +151,13 @@ namespace mattatz.ProceduralFlower {
 			var stem = new Stem(10, 2, 0.01f);
 			var go = CreateStem(stem, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
 			go.transform.localPosition = segment.position;
-			go.transform.localScale *= Random.Range(0.55f, 1f);
+			go.transform.localScale *= rand.SampleRange(0.55f, 1f);
 			go.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
 
 			var leaf = Create(leafData, "Leaf");
 			leaf.transform.SetParent(go.transform, false);
 			leaf.transform.localPosition = stem.Tip.position;
-			leaf.transform.localRotation *= Quaternion.AngleAxis(Random.Range(0f, 30f), Vector3.up);
+			leaf.transform.localRotation *= Quaternion.AngleAxis(rand.SampleRange(0f, 30f), Vector3.up);
 
 			return go;
 		}
@@ -161,7 +167,7 @@ namespace mattatz.ProceduralFlower {
 			count = Mathf.Max(4, count);
 			for(int i = 0; i < count; i++) {
 				var r = (float)i / (count - 1);
-				var circle = Random.insideUnitCircle * radius;
+                var circle = rand.SampleUnitCircle() * radius;
 				controls.Add(new Vector3(circle.x, r * height, circle.y));
 			}
 			return controls;
