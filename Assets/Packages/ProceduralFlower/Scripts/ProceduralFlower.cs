@@ -14,18 +14,31 @@ namespace mattatz.ProceduralFlower {
 		[SerializeField] ShapeData leafData;
 		[SerializeField] StemData stemData;
 
+        #region Flower Settings
+
         // [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
         [HideInInspector] public float c = 0.1f;
         [HideInInspector] public int n = 75;
+        [HideInInspector] public float scale = 1f;
+        [HideInInspector] public float power = 1f;
+        [HideInInspector] public float min = 0.1f;
+        [HideInInspector] public float angle = 60f;
+        [HideInInspector] public float angleScale = 1f;
+        [HideInInspector] public float offset = 0.25f;
 
-		[HideInInspector] public float height = 2f;
+        #endregion
+
+        [HideInInspector] public float height = 2f;
 		[HideInInspector] public int leafCount = 3;
 
-        [SerializeField] int seed = 0;
+        #region Random
 
+        [SerializeField] int seed = 0;
         Rand rand;
 
-		[SerializeField] List<GameObject> children;
+        #endregion
+
+        [SerializeField] List<GameObject> children;
 
 		[System.Serializable]
 		class ShapeData {
@@ -88,7 +101,6 @@ namespace mattatz.ProceduralFlower {
 				var from = segments[index];
 				var to = segments[index + 1];
 				var dir = (to.position - from.position).normalized;
-				// var leaf = CreateLeaf(segments[rand.Range(offset, hs)], dir, i % 4 * 60f);
 				var leaf = CreateLeaf(segments[rand.SampleRange(hs, offset)], dir, i % 4 * 60f);
 				children.Add(leaf);
 			}
@@ -122,10 +134,9 @@ namespace mattatz.ProceduralFlower {
 
 				var go = Instantiate(source);
                 go.transform.SetParent(flower.transform, false);
-                // go.transform.localScale = Vector3.one * Mathf.Clamp01(r + 0.1f);
-                go.transform.localScale = Vector3.one * Mathf.Clamp01(p.magnitude + 0.1f);
-                go.transform.localPosition = p + Vector3.up * (1f - r) * 0.25f;
-                go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r) * 60f + 1f, Vector3.right);
+                go.transform.localScale = Vector3.one * Mathf.Max(min, Mathf.Pow(p.magnitude, power)) * scale;
+                go.transform.localPosition = p + Vector3.up * (1f - r) * offset;
+                go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r * angleScale) * angle, Vector3.right);
             }
 
 			if(Application.isPlaying) {
