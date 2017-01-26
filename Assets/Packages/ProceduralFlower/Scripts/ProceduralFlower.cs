@@ -7,7 +7,6 @@ using System.Collections.Generic;
 
 namespace mattatz.ProceduralFlower {
 
-	[ExecuteInEditMode]
     public class ProceduralFlower : MonoBehaviour {
 
 		[SerializeField] ShapeData petalData;
@@ -20,7 +19,6 @@ namespace mattatz.ProceduralFlower {
         [HideInInspector] public float c = 0.1f;
         [HideInInspector] public int n = 75;
         [HideInInspector] public float scale = 1f;
-        [HideInInspector] public float power = 1f;
         [HideInInspector] public float min = 0.1f;
         [HideInInspector] public float angle = 60f;
         [HideInInspector] public float angleScale = 1f;
@@ -30,6 +28,7 @@ namespace mattatz.ProceduralFlower {
 
         [HideInInspector] public float height = 2f;
 		[HideInInspector] public int leafCount = 3;
+        [HideInInspector] public Vector2 leafRange = new Vector2(0.2f, 0.92f);
 
         #region Random
 
@@ -94,14 +93,22 @@ namespace mattatz.ProceduralFlower {
 			children.Add(stem);
 
 			var segments = stemData.stem.Segments;
-			var offset = 3;
-			var hs = offset + Mathf.FloorToInt(segments.Count * 0.5f);
+			var offset = leafRange.x * segments.Count;
+            var len = (leafRange.y - leafRange.x) * segments.Count;
+            var size = 1f;
+
             for (int i = 0; i < leafCount; i++) {
-                int index = rand.SampleRange(0, hs);
+                var r = (float)(i + 1) / (leafCount + 1);
+                int index = Mathf.Min(Mathf.FloorToInt(len * r + offset), segments.Count - 2);
 				var from = segments[index];
 				var to = segments[index + 1];
 				var dir = (to.position - from.position).normalized;
-				var leaf = CreateLeaf(segments[rand.SampleRange(hs, offset)], dir, i % 4 * 60f);
+				var leaf = CreateLeaf(segments[index], dir, (i % 4) * 90f + rand.SampleRange(-20f, 20f));
+
+                // lower leaf becomes bigger than upper one.
+                size = rand.SampleRange(size, 1f - (r * 0.5f));
+                leaf.transform.localScale *= size;
+
 				children.Add(leaf);
 			}
 
@@ -134,7 +141,7 @@ namespace mattatz.ProceduralFlower {
 
 				var go = Instantiate(source);
                 go.transform.SetParent(flower.transform, false);
-                go.transform.localScale = Vector3.one * Mathf.Max(min, Mathf.Pow(p.magnitude, power)) * scale;
+                go.transform.localScale = Vector3.one * Mathf.Max(min, p.magnitude) * scale;
                 go.transform.localPosition = p + Vector3.up * (1f - r) * offset;
                 go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r * angleScale) * angle, Vector3.right);
             }
@@ -162,7 +169,6 @@ namespace mattatz.ProceduralFlower {
 			var stem = new Stem(10, 2, 0.01f);
 			var go = CreateStem(stem, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
 			go.transform.localPosition = segment.position;
-			go.transform.localScale *= rand.SampleRange(0.55f, 1f);
 			go.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
 
 			var leaf = Create(leafData, "Leaf");
