@@ -141,8 +141,14 @@ namespace mattatz.ProceduralFlower {
 
 				var go = Instantiate(source);
                 go.transform.SetParent(flower.transform, false);
-                go.transform.localScale = Vector3.one * Mathf.Max(min, p.magnitude) * scale;
-                go.transform.localPosition = p + Vector3.up * (1f - r) * offset;
+
+                if(p.magnitude < 0.03f) {
+                    go.transform.localScale = Vector3.one * 0.2f;
+                } else {
+                    go.transform.localScale = Vector3.one * (1f + Mathf.Max(min, p.magnitude)) * scale;
+                }
+
+                go.transform.localPosition = p + Vector3.down * r * offset;
                 go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r * angleScale) * angle, Vector3.right);
             }
 

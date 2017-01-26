@@ -1,6 +1,7 @@
 ﻿Shader "ProceduralFlower/Petal" {
 	Properties {
 		_MainTex ("Texture", 2D) = "white" {}
+		_Bend ("Bend", Float) = 0.5
 		_Cull ("Cull", Int) = 0.0 // Off
 	}
 
@@ -29,11 +30,19 @@
 				float2 uv : TEXCOORD0;
 			};
 
+			#define HALF_PI 1.570795
+			#define PI 3.14159
+
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
+
+			fixed _Bend;
 			
 			v2f vert (appdata v) {
 				v2f o;
+
+				float bend = pow(abs(v.vertex.x), 2.0) * _Bend;
+				v.vertex.z += bend;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.normal = UnityObjectToWorldNormal(v.normal);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
