@@ -9,7 +9,11 @@ namespace mattatz.ProceduralFlower {
 
     public class ProceduralFlower : MonoBehaviour {
 
+		const string PROPERTY_BEND = "_Bend";
+
+		[SerializeField] ShapeData budData;
 		[SerializeField] ShapeData petalData;
+
 		[SerializeField] ShapeData leafData;
 		[SerializeField] StemData stemData;
 
@@ -18,6 +22,7 @@ namespace mattatz.ProceduralFlower {
         // [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
         [HideInInspector] public float c = 0.1f;
         [HideInInspector] public int n = 75;
+        [HideInInspector] public int m = 5;
         [HideInInspector] public float scale = 1f;
         [HideInInspector] public float min = 0.1f;
         [HideInInspector] public float angle = 60f;
@@ -28,7 +33,8 @@ namespace mattatz.ProceduralFlower {
 
         [HideInInspector] public float height = 2f;
 		[HideInInspector] public int leafCount = 3;
-        [HideInInspector] public Vector2 leafRange = new Vector2(0.2f, 0.92f);
+        [HideInInspector] public Vector2 leafScaleRange = new Vector2(0.2f, 0.725f);
+        [HideInInspector] public Vector2 leafSegmentRange = new Vector2(0.2f, 0.92f);
 
         #region Random
 
@@ -85,6 +91,7 @@ namespace mattatz.ProceduralFlower {
 				children.Clear();
 			}
 
+			budData.Init();
 			petalData.Init();
 			leafData.Init();
 			stemData.Init();
@@ -93,8 +100,8 @@ namespace mattatz.ProceduralFlower {
 			children.Add(stem);
 
 			var segments = stemData.stem.Segments;
-			var offset = leafRange.x * segments.Count;
-            var len = (leafRange.y - leafRange.x) * segments.Count;
+			var offset = leafSegmentRange.x * segments.Count;
+            var len = (leafSegmentRange.y - leafSegmentRange.x) * segments.Count;
             var size = 1f;
 
             for (int i = 0; i < leafCount; i++) {
@@ -107,7 +114,7 @@ namespace mattatz.ProceduralFlower {
 
                 // lower leaf becomes bigger than upper one.
                 size = rand.SampleRange(size, 1f - (r * 0.5f));
-                leaf.transform.localScale *= size;
+				leaf.transform.localScale *= Mathf.Lerp(leafScaleRange.x, leafScaleRange.y, size);
 
 				children.Add(leaf);
 			}
@@ -122,13 +129,15 @@ namespace mattatz.ProceduralFlower {
 		GameObject Create(ShapeData data, string name) {
 			var go = new GameObject(name);
 			go.AddComponent<MeshFilter>().mesh = data.mesh;
-			go.AddComponent<MeshRenderer>().material = data.material;
+			go.AddComponent<MeshRenderer>().sharedMaterial = data.material;
 			return go;
 		}
 
 		GameObject CreateFlower () {
             var floret = new Florets();
-			var source = Create(petalData, "Petal");
+
+			var bud = Create(budData, "Bud");
+			var petal = Create(petalData, "Petal");
 
 			var flower = new GameObject("Flower");
 			flower.transform.SetParent(transform, false);
@@ -139,23 +148,34 @@ namespace mattatz.ProceduralFlower {
 
                 var p = floret.Get(i + 1, c);
 
-				var go = Instantiate(source);
-                go.transform.SetParent(flower.transform, false);
+				GameObject go;
 
-                if(p.magnitude < 0.03f) {
-                    go.transform.localScale = Vector3.one * 0.2f;
+				if(i < m) {
+					go = Instantiate(bud);
+                    go.transform.localScale = Vector3.one * (1f + Mathf.Max(min, p.magnitude)) * scale * 0.75f;
                 } else {
+					go = Instantiate(petal);
                     go.transform.localScale = Vector3.one * (1f + Mathf.Max(min, p.magnitude)) * scale;
                 }
+
+				var block = new MaterialPropertyBlock();
+				var rnd = go.GetComponent<MeshRenderer>();
+				rnd.GetPropertyBlock(block);
+				block.SetFloat(PROPERTY_BEND, (1f - r));
+				rnd.SetPropertyBlock(block);
+
+	            go.transform.SetParent(flower.transform, false);
 
                 go.transform.localPosition = p + Vector3.down * r * offset;
                 go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r * angleScale) * angle, Vector3.right);
             }
 
 			if(Application.isPlaying) {
-				Destroy(source);
+				Destroy(bud);
+				Destroy(petal);
 			} else {
-				DestroyImmediate(source);
+				DestroyImmediate(bud);
+				DestroyImmediate(petal);
 			}
 
 			return flower;

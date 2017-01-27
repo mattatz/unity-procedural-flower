@@ -1,4 +1,4 @@
-﻿Shader "ProceduralFlower/Petal" {
+﻿Shader "ProceduralFlower/Bud" {
 	Properties {
 		_MainTex ("Texture", 2D) = "white" {}
 		_Bend ("Bend", Range(0.0, 1.0)) = 0.5
@@ -42,7 +42,7 @@
 				v2f o;
 
 				float bend = pow(abs(v.vertex.x), 2.0) * _Bend;
-				v.vertex.z += bend;
+				v.vertex.z += bend - (sin(v.vertex.y * PI) * 0.15 * _Bend);
 
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.normal = UnityObjectToWorldNormal(v.normal);
