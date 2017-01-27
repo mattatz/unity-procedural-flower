@@ -14,11 +14,11 @@ namespace mattatz.ProceduralFlower {
 		[SerializeField] float size = 1f;
 		[SerializeField] int numberOfVerticesOnOneSide = 20;
 		[SerializeField] int resolution = 2;
-		[SerializeField] float depth = 0.25f;
-		[SerializeField] Vector2 scale = Vector2.zero;
+		[SerializeField] float noiseDepth = 0.25f;
+		[SerializeField] Vector2 noiseScale = Vector2.zero;
 
 		public Mesh Build () {
-			return Build(size, controls, numberOfVerticesOnOneSide, resolution, depth, scale);
+			return Build(size, controls, numberOfVerticesOnOneSide, resolution, noiseDepth, noiseScale);
 		}
 
 		public static List<Vector3> Mirror (List<ControlPoint> controls, float height, float width) {
@@ -37,7 +37,7 @@ namespace mattatz.ProceduralFlower {
 			return points;
 		}
 
-		public static Mesh Build (float size, List<ControlPoint> controls, int numberOfVerticesOnOneSide = 20, int resolution = 2, float depth = 0.25f, Vector2 noiseScale = default(Vector2), Vector2 noiseOffset = default(Vector2)) {
+		public static Mesh Build (float size, List<ControlPoint> controls, int numberOfVerticesOnOneSide = 20, int resolution = 2, float noiseDepth = 0.25f, Vector2 noiseScale = default(Vector2), Vector2 noiseOffset = default(Vector2)) {
 			var mesh = new Mesh();
 
 			resolution = Mathf.Max(1, resolution);
@@ -149,7 +149,7 @@ namespace mattatz.ProceduralFlower {
 
 			var noffset = noiseOffset + new Vector2(size, size);
 			mesh.vertices = vertices.Select(v => {
-				return new Vector3(v.x, v.y, v.y * depth * Depth(v, noffset, noiseScale));
+				return new Vector3(v.x, v.y, v.y * noiseDepth * Depth(v, noffset, noiseScale));
 			}).ToArray();
 			mesh.uv = uv.ToArray();
 			mesh.triangles = triangles.ToArray();
@@ -195,8 +195,8 @@ namespace mattatz.ProceduralFlower {
 			return points[index];
 		}
 
-		static float Depth (Vector3 v, Vector2 offset, Vector2 scale) {
-			return Mathf.PerlinNoise((v.x + offset.x) * scale.x, (v.y + offset.y) * scale.y) - 0.5f;
+		static float Depth (Vector3 v, Vector2 noiseOffset, Vector2 noiseScale) {
+			return Mathf.PerlinNoise((v.x + noiseOffset.x) * noiseScale.x, (v.y + noiseOffset.y) * noiseScale.y) - 0.5f;
 		}
 
 

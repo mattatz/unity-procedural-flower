@@ -13,7 +13,6 @@ namespace mattatz.ProceduralFlower {
 
 		[SerializeField] ShapeData budData;
 		[SerializeField] ShapeData petalData;
-
 		[SerializeField] ShapeData leafData;
 		[SerializeField] StemData stemData;
 
@@ -22,7 +21,7 @@ namespace mattatz.ProceduralFlower {
         // [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
         [HideInInspector] public float c = 0.1f;
         [HideInInspector] public int n = 75;
-        [HideInInspector] public int m = 5;
+        [HideInInspector] public int m = 10;
         [HideInInspector] public float scale = 1f;
         [HideInInspector] public float min = 0.1f;
         [HideInInspector] public float angle = 60f;
@@ -43,7 +42,7 @@ namespace mattatz.ProceduralFlower {
 
         #endregion
 
-        [SerializeField] List<GameObject> children;
+        List<GameObject> children;
 
 		[System.Serializable]
 		class ShapeData {
@@ -72,12 +71,11 @@ namespace mattatz.ProceduralFlower {
 		}
 
         void Start () {
+			Clear();
 			Build();
         }
 
-		public void Build () {
-            rand = new Rand(seed);
-
+		public void Clear () {
 			if(children == null) {
 				children = new List<GameObject>();
 			} else {
@@ -90,6 +88,10 @@ namespace mattatz.ProceduralFlower {
 				});
 				children.Clear();
 			}
+		}
+
+		public void Build () {
+            rand = new Rand(seed);
 
 			budData.Init();
 			petalData.Init();

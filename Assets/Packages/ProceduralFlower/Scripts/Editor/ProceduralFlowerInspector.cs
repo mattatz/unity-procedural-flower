@@ -18,7 +18,7 @@ namespace mattatz.ProceduralFlower {
 
 			flower.c = EditorGUILayout.Slider("C", flower.c, 0.01f, 0.1f);
 			flower.n = EditorGUILayout.IntSlider("# of petals", flower.n, 10, 200);
-			flower.m = EditorGUILayout.IntSlider("# of buds", flower.m, 0, 15);
+			flower.m = EditorGUILayout.IntSlider("# of buds", flower.m, 0, flower.n);
 			flower.scale = EditorGUILayout.Slider("Scale", flower.scale, 0.1f, 0.6f);
 			flower.min = EditorGUILayout.Slider("Min", flower.min, 0.0f, 1f);
 			flower.angle = EditorGUILayout.Slider("Angle", flower.angle, 30f, 100f);
@@ -35,6 +35,7 @@ namespace mattatz.ProceduralFlower {
                 Undo.RecordObject(flower, "Flower");
 
                 if(Application.isPlaying) {
+					flower.Clear();
                     flower.Build();
                 }
 			}
