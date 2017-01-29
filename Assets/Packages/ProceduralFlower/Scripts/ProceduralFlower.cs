@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
+using Random = UnityEngine.Random;
 
 using System;
 using System.Linq;
@@ -10,8 +11,6 @@ namespace mattatz.ProceduralFlower {
 
 	[CreateAssetMenu(menuName = "ProceduralFlower/Flower")]
     public class ProceduralFlower : ScriptableObject {
-
-		const string PROPERTY_BEND = "_Bend";
 
 		[SerializeField] ShapeData budData;
 		[SerializeField] ShapeData petalData;
@@ -114,8 +113,9 @@ namespace mattatz.ProceduralFlower {
                 }
 
 				var part = go.GetComponent<PFPart>();
+				part.Colorize(new Color(rand.SampleRange(0.5f, 1f), rand.SampleRange(0.5f, 1f), rand.SampleRange(0.5f, 1f)));
 				part.Bend(1f - r);
-				part.Fade(visible ? 1f : 0f);
+				part.Fade(visible ? 1f + part.EPSILON : 0f);
 
 	            go.transform.SetParent(flower.transform, false);
 
@@ -146,7 +146,7 @@ namespace mattatz.ProceduralFlower {
 			rnd.receiveShadows = receiveShadows;
 
 			var part = go.AddComponent<PFPart>();
-			part.Fade(visible ? 1f : 0f);
+			part.Fade(visible ? 1f + part.EPSILON : 0f);
 
 			return go;
 		}

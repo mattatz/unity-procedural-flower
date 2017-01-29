@@ -4,8 +4,8 @@
 #define PF_HALF_PI 1.570795
 #define PF_PI 3.14159
 
-fixed4 _Color;
-float _Bend, _T;
+half4 _Color, _Color2;
+float _Bend, _T, _Intensity;
 
 uniform float4 _LightColor0;
 
@@ -26,7 +26,7 @@ float3 bend_bud (float3 v) {
 }
 
 void fade (float2 uv) {
-	clip(_T - uv.y);
+	clip(_T - uv.y - 0.075);
 }
 
 struct appdata {
@@ -37,8 +37,9 @@ struct appdata {
 
 struct v2f {
 	float4 pos : SV_POSITION;
+	float3 normal : NORMAL;
 	float3 lightDir : TEXCOORD0;
-	float3 normal : TEXCOORD1;
+	float3 viewDir : TEXCOORD1;
 	float2 uv : TEXCOORD2;
 	LIGHTING_COORDS(3, 4)
 };
@@ -52,8 +53,17 @@ v2f vert_common (appdata v) {
 	v2f OUT;
 	OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 	OUT.uv = v.uv;
-	OUT.lightDir = normalize(ObjSpaceLightDir(v.vertex));
-	OUT.normal = v.normal.xyz;
+	OUT.lightDir = ObjSpaceLightDir(v.vertex);
+	OUT.viewDir = ObjSpaceViewDir(v.vertex);
+
+	#ifdef CULL_BACK
+	OUT.normal = v.normal;
+	#elif CULL_FRONT
+	OUT.normal = -v.normal;
+	#else
+	// OUT.normal = v.normal;
+	OUT.normal = float3(0, 0, 0);
+	#endif
 
 	TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 	TRANSFER_SHADOW(OUT);
@@ -62,6 +72,7 @@ v2f vert_common (appdata v) {
 
 v2f_shadow vert_shadow_common (appdata v) {
 	v2f_shadow OUT;
+
 	TRANSFER_SHADOW_CASTER_NORMALOFFSET(OUT)
 	OUT.uv = v.uv;
 	return OUT;
@@ -92,9 +103,10 @@ float4 frag_common (v2f IN) : SV_Target {
 
 	fixed atten = LIGHT_ATTENUATION(IN);
 	fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT;
-	fixed d = saturate(dot(normalize(IN.lightDir), normalize(IN.normal)));
-	fixed4 c = _Color;
-	c.rgb = (c * _LightColor0 * atten * d) + ambient;
+	half3 halfDir = normalize(IN.lightDir) + normalize(IN.viewDir);
+	fixed diff = max(1.0 - _Intensity, dot(normalize(halfDir), normalize(IN.normal)));
+	fixed4 c = _Color * _Color2;
+	c.rgb = (c * _LightColor0 * atten * diff) + ambient;
 	return c;
 }
 

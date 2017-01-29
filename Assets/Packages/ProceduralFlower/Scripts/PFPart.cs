@@ -6,10 +6,11 @@ namespace mattatz.ProceduralFlower {
 
 	public class PFPart : MonoBehaviour {
 
+		const string PROPERTY_COLOR = "_Color2";
 		const string PROPERTY_BEND = "_Bend";
 		const string PROPERTY_T = "_T";
 
-		MeshRenderer renderer {
+		MeshRenderer rnd {
 			get {
 				if(_renderer == null) {
 					_renderer = GetComponent<MeshRenderer>();
@@ -22,7 +23,7 @@ namespace mattatz.ProceduralFlower {
 			get {
 				if(_block == null) {
 					_block = new MaterialPropertyBlock();
-					renderer.GetPropertyBlock(_block);
+					rnd.GetPropertyBlock(_block);
 				}
 				return _block;
 			}
@@ -32,6 +33,7 @@ namespace mattatz.ProceduralFlower {
 		MeshRenderer _renderer;
 		List<PFAnimation> animations = new List<PFAnimation>();
 
+		public readonly float EPSILON = 0.1f;
 		float multiplySpeed = 1f;
 		float speed = 1f;
 
@@ -44,7 +46,7 @@ namespace mattatz.ProceduralFlower {
 				ticker += Time.deltaTime * multiplySpeed * speed;
 				Fade(ticker);
 				animations.ForEach(anim => anim.Animate(speed, ticker));
-				if(ticker > 1f) {
+				if(ticker > 1f + EPSILON) {
 					animating = false;
 				}
 			}
@@ -54,17 +56,24 @@ namespace mattatz.ProceduralFlower {
 			substance = flag;
 		}
 
+		public void Colorize (Color color) {
+			if(substance) {
+				block.SetColor(PROPERTY_COLOR, color);
+				rnd.SetPropertyBlock(block);			
+			}
+		}
+
 		public void Bend (float bend) {
 			if(substance) {
 				block.SetFloat(PROPERTY_BEND, bend);
-				renderer.SetPropertyBlock(block);			
+				rnd.SetPropertyBlock(block);			
 			}
 		}
 
 		public void Fade (float t) {
 			if(substance) {
 				block.SetFloat(PROPERTY_T, t);
-				renderer.SetPropertyBlock(block);			
+				rnd.SetPropertyBlock(block);			
 			}
 		}
 

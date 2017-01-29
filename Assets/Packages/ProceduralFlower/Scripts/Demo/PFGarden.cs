@@ -12,13 +12,12 @@ namespace mattatz.ProceduralFlower.Demo {
 
 		const string SHADER_PATH = "Hidden/Internal-Colored";
 
-        Material lineMaterial;
-		MeshCollider collider;
+        Material lineMaterial = null;
+		MeshCollider col = null;
 		Vector3[] vertices;
 		int[] triangles;
 
 		bool hit;
-		bool dragging;
 		Vector3 point;
 		Vector3 normal;
 		Quaternion rotation;
@@ -27,7 +26,7 @@ namespace mattatz.ProceduralFlower.Demo {
 			var mouse = Input.mousePosition;
 			var ray = Camera.main.ScreenPointToRay(mouse);
 			RaycastHit info;
-			hit = collider.Raycast(ray, out info, float.MaxValue);
+			hit = col.Raycast(ray, out info, float.MaxValue);
 			if(hit) {
 				point = info.point;
 				var t = info.triangleIndex * 3;
@@ -41,13 +40,6 @@ namespace mattatz.ProceduralFlower.Demo {
 				rotation = Quaternion.LookRotation(normal);
 			}
 
-			if(Input.GetMouseButtonDown(0)) {
-				dragging = true;
-			} else if(Input.GetMouseButtonUp(0)) {
-				dragging = false;
-			}
-
-			// if(dragging && hit) {
 			if(Input.GetMouseButtonUp(0) && hit) {
 				var go = Instantiate(prefabs[Random.Range(0, prefabs.Count)]) as GameObject;
 				go.transform.position = point;
@@ -88,7 +80,7 @@ namespace mattatz.ProceduralFlower.Demo {
 		}
 
 		void OnEnable () {
-			collider = GetComponent<MeshCollider>();
+			col = GetComponent<MeshCollider>();
 			var mesh = GetComponent<MeshFilter>().sharedMesh;
 			vertices = mesh.vertices;
 			triangles = mesh.triangles;
