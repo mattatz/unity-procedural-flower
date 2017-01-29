@@ -23,7 +23,7 @@ ProceduralFlower can animate.
 
 ## Usage
 
-Proceduralflower needs 3 PFShape(ScriptableObject) for petal and leaf shapes.
+ProceduralFlower needs 3 PFShape(ScriptableObject) for petal and leaf shapes.
 
 PFShape has control points and you can design its outline by the editor.
 
