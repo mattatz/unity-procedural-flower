@@ -23,7 +23,7 @@ namespace mattatz.MeshBuilderSystem {
 
             switch(type) {
                 case PlaneType.Noise:
-                    filter.mesh = PlaneBuilder.Build(new ParametricPlanePerlin(Vector2.zero, new Vector2(2f, 2f), 0.5f), width, height, wSegments, hSegments);
+                    filter.mesh = PlaneBuilder.Build(new ParametricPlanePerlin(Vector2.zero, new Vector2(5f, 5f), 0.5f), width, height, wSegments, hSegments);
                     break;
                 default:
                     filter.mesh = PlaneBuilder.Build(width, height, wSegments, hSegments);

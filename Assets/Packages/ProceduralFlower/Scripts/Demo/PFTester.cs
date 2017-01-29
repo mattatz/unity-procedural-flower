@@ -17,7 +17,7 @@ namespace mattatz.ProceduralFlower.Demo {
 		public void Build () {
 			Clear();
 			child = flower.Build();
-			child.transform.SetParent(transform);
+			child.transform.SetParent(transform, false);
 		}
 
 		public void Clear () {

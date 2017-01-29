@@ -49,6 +49,8 @@ namespace mattatz.MeshBuilderSystem {
             mesh.SetTriangles(triangles.ToArray(), 0);
             mesh.uv = uvs.ToArray();
 
+			mesh.RecalculateNormals();
+
             return mesh;
         }
 

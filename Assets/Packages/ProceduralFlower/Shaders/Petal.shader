@@ -1,41 +1,42 @@
-﻿Shader "mattatz/ProceduralFlower/Petal" {
+﻿Shader "mattatz/ProceduralFlower/Petal"
+{
 	Properties {
-		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
-		_Bend ("Bend", Range(0.0, 1.0)) = 0.5
+		_Color ("Color", Color) = (1, 1, 1, 1)
+		_Bend ("Bend", Range(0.0, 1.0)) = 0.0
+		_T ("T", Range(0.0, 1.0)) = 1.0
 	}
+
+	CGINCLUDE
+
+	#pragma multi_compile_fwdbase
+	#include "UnityCG.cginc"
+	#include "AutoLight.cginc"
+	#include "ProceduralFlower.cginc"
+
+	ENDCG
+
 	SubShader {
-		Tags { "RenderType"="Opaque" }
-		LOD 200
-		Cull Off
-		
-		CGPROGRAM
 
-		#include "ProceduralFlower.cginc"
-
-		#pragma surface surf Standard fullforwardshadows vertex:pf_vert_petal keepalpha
-		#pragma target 3.0
-
-		sampler2D _MainTex;
-
-		struct Input {
-			float2 uv_MainTex;
-		};
-
-		half _Glossiness;
-		half _Metallic;
-		fixed4 _Color;
-
-		void surf (Input IN, inout SurfaceOutputStandard o) {
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-			o.Albedo = c.rgb;
-			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
-			o.Alpha = c.a;
+		Pass {
+			Tags { "RenderType"="Opaque" "LightMode" = "ForwardBase" }
+			Lighting On ZWrite On Cull Off
+			LOD 100
+			CGPROGRAM
+			#pragma vertex vert_petal
+			#pragma fragment frag_common
+			ENDCG
 		}
-		ENDCG
+
+		Pass {
+			Name "ShadowCaster"
+			Tags { "LightMode" = "ShadowCaster" }
+			ZWrite On ZTest LEqual Cull Off
+
+			CGPROGRAM
+			#pragma multi_compile_shadowcaster
+			#pragma vertex vert_shadow_petal
+			#pragma fragment frag_shadow_common
+			ENDCG
+		}
 	}
-	FallBack "Diffuse"
 }

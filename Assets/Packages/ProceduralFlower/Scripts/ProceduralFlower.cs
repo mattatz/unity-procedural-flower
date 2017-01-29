@@ -44,9 +44,7 @@ namespace mattatz.ProceduralFlower {
 
         #endregion
 
-		public GameObject Build () {
-			var root = new GameObject("ProceduralFlower");
-
+		public GameObject Build (bool visible = true) {
             rand = new PFRandom(seed);
 
 			budData.Init();
@@ -54,8 +52,8 @@ namespace mattatz.ProceduralFlower {
 			leafData.Init();
 			stemData.Init();
 
-			var stem = CreateStem(stemData.stem, stemData.shadowCastingMode, stemData.receiveShadows, (float r) => 1f, height, stemData.bend);
-			stem.transform.SetParent(root.transform);
+			var root = CreateStem("Root", stemData.stem, stemData.shadowCastingMode, stemData.receiveShadows, (float r) => 1f, height, stemData.bend, visible);
+			var stemPart = root.GetComponent<PFPart>();
 
 			var segments = stemData.stem.Segments;
 			var offset = leafSegmentRange.x * segments.Count;
@@ -68,40 +66,36 @@ namespace mattatz.ProceduralFlower {
 				var from = segments[index];
 				var to = segments[index + 1];
 				var dir = (to.position - from.position).normalized;
-				var leaf = CreateLeaf(segments[index], dir, (i % 4) * 90f + rand.SampleRange(-20f, 20f));
+				var leaf = CreateLeaf(segments[index], dir, (i % 4) * 90f + rand.SampleRange(-20f, 20f), visible);
 				leaf.transform.SetParent(root.transform);
 
                 // lower leaf becomes bigger than upper one.
                 size = rand.SampleRange(size, 1f - (r * 0.5f));
 				leaf.transform.localScale *= Mathf.Lerp(leafScaleRange.x, leafScaleRange.y, size);
+
+				var leafPart = leaf.GetComponent<PFPart>();
+				stemPart.Add(leafPart, r);
 			}
 
-			var flower = CreateFlower();
+			var flower = CreateFlower(visible);
 			flower.transform.SetParent(root.transform);
 			flower.transform.localPosition = stemData.stem.Tip.position;
 			flower.transform.localRotation *= stemData.stem.Tip.rotation * Quaternion.FromToRotation(Vector3.back, Vector3.up);
 
+			stemPart.Add(flower.GetComponent<PFPart>(), 1f);
+
 			return root;
 		}
 
-		GameObject Create(ShapeData data, string name) {
-			var go = new GameObject(name);
-			go.AddComponent<MeshFilter>().mesh = data.mesh;
-
-			var rnd = go.AddComponent<MeshRenderer>();
-			rnd.sharedMaterial = data.material;
-			rnd.shadowCastingMode = data.shadowCastingMode;
-			rnd.receiveShadows = data.receiveShadows;
-			return go;
-		}
-
-		GameObject CreateFlower () {
+		GameObject CreateFlower (bool visible) {
             var floret = new Florets();
 
-			var bud = Create(budData, "Bud");
-			var petal = Create(petalData, "Petal");
+			var bud = CreateShape("Bud", budData, visible);
+			var petal = CreateShape("Petal", petalData, visible);
 
 			var flower = new GameObject("Flower");
+			var root = flower.AddComponent<PFPart>();
+			root.HasSubstance(false);
 
             var inv = 1f / n;
             for(int i = 0; i < n; i++) {
@@ -119,16 +113,16 @@ namespace mattatz.ProceduralFlower {
                     go.transform.localScale = Vector3.one * (1f + Mathf.Max(min, p.magnitude)) * scale;
                 }
 
-				var block = new MaterialPropertyBlock();
-				var rnd = go.GetComponent<MeshRenderer>();
-				rnd.GetPropertyBlock(block);
-				block.SetFloat(PROPERTY_BEND, (1f - r));
-				rnd.SetPropertyBlock(block);
+				var part = go.GetComponent<PFPart>();
+				part.Bend(1f - r);
+				part.Fade(visible ? 1f : 0f);
 
 	            go.transform.SetParent(flower.transform, false);
 
                 go.transform.localPosition = p + Vector3.down * r * offset;
                 go.transform.localRotation = Quaternion.LookRotation(Vector3.up, p.normalized) * Quaternion.AngleAxis((1f - r * angleScale) * angle, Vector3.right);
+
+				root.Add(go.GetComponent<PFPart>(), r);
             }
 
 			if(Application.isPlaying) {
@@ -142,32 +136,47 @@ namespace mattatz.ProceduralFlower {
 			return flower;
 		}
 
-		GameObject CreateStem(PFStem stem, ShadowCastingMode shadowCastingMode, bool receiveShadows, Func<float, float> f, float height, float bend) {
-			var controls = GetControls(4, height, bend);
-			var mesh = stem.Build(controls, f);
-			var go = new GameObject("Stem");
-			go.AddComponent<MeshFilter>().sharedMesh = mesh;
+		GameObject CreateBase (string name, Mesh mesh, Material material, ShadowCastingMode shadowCastingMode, bool receiveShadows, bool visible) {
+			var go = new GameObject(name);
+			go.AddComponent<MeshFilter>().mesh = mesh;
 
 			var rnd = go.AddComponent<MeshRenderer>();
-			rnd.sharedMaterial = stemData.material;
+			rnd.sharedMaterial = material;
 			rnd.shadowCastingMode = shadowCastingMode;
 			rnd.receiveShadows = receiveShadows;
+
+			var part = go.AddComponent<PFPart>();
+			part.Fade(visible ? 1f : 0f);
 
 			return go;
 		}
 
-		GameObject CreateLeaf (Point segment, Vector3 dir, float angle) {
-			var stem = new PFStem(10, 2, 0.01f);
-			var go = CreateStem(stem, leafData.shadowCastingMode, leafData.receiveShadows, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
-			go.transform.localPosition = segment.position;
-			go.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
+		GameObject CreateShape(string name, ShapeData data, bool visible) {
+			return CreateBase(name, data.mesh, data.material, data.shadowCastingMode, data.receiveShadows, visible);
+		}
 
-			var leaf = Create(leafData, "Leaf");
-			leaf.transform.SetParent(go.transform, false);
+		GameObject CreateStem(string name, PFStem stem, ShadowCastingMode shadowCastingMode, bool receiveShadows, Func<float, float> f, float height, float bend, bool visible) {
+			var controls = GetControls(4, height, bend);
+			var mesh = stem.Build(controls, f);
+			return CreateBase(name, mesh, stemData.material, stemData.shadowCastingMode, stemData.receiveShadows, visible);
+		}
+
+		GameObject CreateLeaf (Point segment, Vector3 dir, float angle, bool visible) {
+			var stem = new PFStem(10, 2, 0.01f);
+			var root = CreateStem("Stem", stem, leafData.shadowCastingMode, leafData.receiveShadows, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f, visible);
+			root.transform.localPosition = segment.position;
+			root.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
+
+			var leaf = CreateShape("Leaf", leafData, visible);
+			leaf.transform.SetParent(root.transform, false);
 			leaf.transform.localPosition = stem.Tip.position;
 			leaf.transform.localRotation *= Quaternion.AngleAxis(rand.SampleRange(0f, 30f), Vector3.up);
 
-			return go;
+			var part = root.GetComponent<PFPart>();
+			part.SetSpeed(5f);
+			part.Add(leaf.GetComponent<PFPart>(), 1f);
+
+			return root;
 		}
 
 		List<Vector3> GetControls (int count, float height, float radius) {

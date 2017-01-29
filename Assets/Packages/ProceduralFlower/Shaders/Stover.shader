@@ -1,4 +1,4 @@
-﻿Shader "mattatz/ProceduralFlower/Bud"
+﻿Shader "mattatz/ProceduralFlower/Stover"
 {
 	Properties {
 		_Color ("Color", Color) = (1, 1, 1, 1)
@@ -22,7 +22,7 @@
 			Lighting On ZWrite On Cull Off
 			LOD 100
 			CGPROGRAM
-			#pragma vertex vert_bud
+			#pragma vertex vert_common
 			#pragma fragment frag_common
 			ENDCG
 		}
@@ -34,7 +34,7 @@
 
 			CGPROGRAM
 			#pragma multi_compile_shadowcaster
-			#pragma vertex vert_shadow_bud
+			#pragma vertex vert_shadow_common
 			#pragma fragment frag_shadow_common
 			ENDCG
 		}
