@@ -5,7 +5,9 @@ Procedural flower generator for Unity.
 
 ![Demo](https://raw.githubusercontent.com/mattatz/unity-procedural-flower/master/Captures/Demo.png)
 
-## Usage
+## Example
+
+### PFTester in Demo.scene
 
 ![Petals](https://raw.githubusercontent.com/mattatz/unity-procedural-flower/master/Captures/Petals.gif)
 
@@ -13,13 +15,19 @@ Procedural flower generator for Unity.
 
 ![Leaves](https://raw.githubusercontent.com/mattatz/unity-procedural-flower/master/Captures/Leaves.gif)
 
-PFShape has control points and you can design its outline by the editor.
-
-![Editor](https://raw.githubusercontent.com/mattatz/unity-procedural-flower/master/Captures/Editor.gif)
+### Garden.scene
 
 ProceduralFlower can animate.
 
 ![Garden](https://raw.githubusercontent.com/mattatz/unity-procedural-flower/master/Captures/Garden.gif)
+
+## Usage
+
+Proceduralflower needs 3 PFShape(ScriptableObject) for petal and leaf shapes.
+
+PFShape has control points and you can design its outline by the editor.
+
+![Editor](https://raw.githubusercontent.com/mattatz/unity-procedural-flower/master/Captures/Editor.gif)
 
 ## Sources
 
