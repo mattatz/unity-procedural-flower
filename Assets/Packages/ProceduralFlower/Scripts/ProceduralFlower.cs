@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 
 using System;
 using System.Linq;
@@ -7,7 +8,8 @@ using System.Collections.Generic;
 
 namespace mattatz.ProceduralFlower {
 
-    public class ProceduralFlower : MonoBehaviour {
+	[CreateAssetMenu(menuName = "ProceduralFlower/Flower")]
+    public class ProceduralFlower : ScriptableObject {
 
 		const string PROPERTY_BEND = "_Bend";
 
@@ -19,87 +21,41 @@ namespace mattatz.ProceduralFlower {
         #region Flower Settings
 
         // [SerializeField, Range(137.4f, 137.6f)] float alpha = 137.5f;
-        [HideInInspector] public float c = 0.1f;
-        [HideInInspector] public int n = 75;
-        [HideInInspector] public int m = 10;
-        [HideInInspector] public float scale = 1f;
+        [HideInInspector] public float c = 0.01f;
+        [HideInInspector] public int n = 70;
+        [HideInInspector] public int m = 8;
+        [HideInInspector] public float scale = 0.328f;
         [HideInInspector] public float min = 0.1f;
-        [HideInInspector] public float angle = 60f;
-        [HideInInspector] public float angleScale = 1f;
-        [HideInInspector] public float offset = 0.25f;
+        [HideInInspector] public float angle = 87f;
+        [HideInInspector] public float angleScale = 0.92f;
+        [HideInInspector] public float offset = 0f;
 
         #endregion
 
         [HideInInspector] public float height = 2f;
-		[HideInInspector] public int leafCount = 3;
-        [HideInInspector] public Vector2 leafScaleRange = new Vector2(0.2f, 0.725f);
+		[HideInInspector] public int leafCount = 6;
+        [HideInInspector] public Vector2 leafScaleRange = new Vector2(0.2f, 0.825f);
         [HideInInspector] public Vector2 leafSegmentRange = new Vector2(0.2f, 0.92f);
 
         #region Random
 
         [SerializeField] int seed = 0;
-        Rand rand;
+        PFRandom rand;
 
         #endregion
 
-        List<GameObject> children;
+		public GameObject Build () {
+			var root = new GameObject("ProceduralFlower");
 
-		[System.Serializable]
-		class ShapeData {
-			[SerializeField] Shape shape;
-			public Material material;
-			[HideInInspector] public Mesh mesh;
-
-			public void Init () {
-				mesh = shape.Build();
-			}
-		}
-
-		[System.Serializable]
-		class StemData {
-			[HideInInspector] public Stem stem;
-
-			public Material material;
-			[SerializeField] int wresolution = 10;
-			[SerializeField] int hresolution = 6;
-			[SerializeField] float radius = 0.02f;
-			public float bend = 0.05f;
-
-			public void Init () {
-				stem = new Stem(wresolution, hresolution, radius);
-			}
-		}
-
-        void Start () {
-			Clear();
-			Build();
-        }
-
-		public void Clear () {
-			if(children == null) {
-				children = new List<GameObject>();
-			} else {
-				children.ForEach(child => {
-					if(Application.isPlaying) {
-						Destroy(child);
-					} else {
-						DestroyImmediate(child);
-					}
-				});
-				children.Clear();
-			}
-		}
-
-		public void Build () {
-            rand = new Rand(seed);
+            rand = new PFRandom(seed);
 
 			budData.Init();
 			petalData.Init();
 			leafData.Init();
 			stemData.Init();
 
-			var stem = CreateStem(stemData.stem, (float r) => 1f, height, stemData.bend);
-			children.Add(stem);
+			var stem = CreateStem(stemData.stem, stemData.shadowCastingMode, stemData.receiveShadows, (float r) => 1f, height, stemData.bend);
+			stem.transform.SetParent(root.transform);
 
 			var segments = stemData.stem.Segments;
 			var offset = leafSegmentRange.x * segments.Count;
@@ -113,25 +69,29 @@ namespace mattatz.ProceduralFlower {
 				var to = segments[index + 1];
 				var dir = (to.position - from.position).normalized;
 				var leaf = CreateLeaf(segments[index], dir, (i % 4) * 90f + rand.SampleRange(-20f, 20f));
+				leaf.transform.SetParent(root.transform);
 
                 // lower leaf becomes bigger than upper one.
                 size = rand.SampleRange(size, 1f - (r * 0.5f));
 				leaf.transform.localScale *= Mathf.Lerp(leafScaleRange.x, leafScaleRange.y, size);
-
-				children.Add(leaf);
 			}
 
 			var flower = CreateFlower();
+			flower.transform.SetParent(root.transform);
 			flower.transform.localPosition = stemData.stem.Tip.position;
 			flower.transform.localRotation *= stemData.stem.Tip.rotation * Quaternion.FromToRotation(Vector3.back, Vector3.up);
 
-			children.Add(flower);
+			return root;
 		}
 
 		GameObject Create(ShapeData data, string name) {
 			var go = new GameObject(name);
 			go.AddComponent<MeshFilter>().mesh = data.mesh;
-			go.AddComponent<MeshRenderer>().sharedMaterial = data.material;
+
+			var rnd = go.AddComponent<MeshRenderer>();
+			rnd.sharedMaterial = data.material;
+			rnd.shadowCastingMode = data.shadowCastingMode;
+			rnd.receiveShadows = data.receiveShadows;
 			return go;
 		}
 
@@ -142,7 +102,6 @@ namespace mattatz.ProceduralFlower {
 			var petal = Create(petalData, "Petal");
 
 			var flower = new GameObject("Flower");
-			flower.transform.SetParent(transform, false);
 
             var inv = 1f / n;
             for(int i = 0; i < n; i++) {
@@ -183,19 +142,23 @@ namespace mattatz.ProceduralFlower {
 			return flower;
 		}
 
-		GameObject CreateStem(Stem stem, Func<float, float> f, float height, float bend) {
+		GameObject CreateStem(PFStem stem, ShadowCastingMode shadowCastingMode, bool receiveShadows, Func<float, float> f, float height, float bend) {
 			var controls = GetControls(4, height, bend);
 			var mesh = stem.Build(controls, f);
 			var go = new GameObject("Stem");
-			go.transform.SetParent(transform, false);
 			go.AddComponent<MeshFilter>().sharedMesh = mesh;
-			go.AddComponent<MeshRenderer>().sharedMaterial = stemData.material;
+
+			var rnd = go.AddComponent<MeshRenderer>();
+			rnd.sharedMaterial = stemData.material;
+			rnd.shadowCastingMode = shadowCastingMode;
+			rnd.receiveShadows = receiveShadows;
+
 			return go;
 		}
 
 		GameObject CreateLeaf (Point segment, Vector3 dir, float angle) {
-			var stem = new Stem(10, 2, 0.01f);
-			var go = CreateStem(stem, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
+			var stem = new PFStem(10, 2, 0.01f);
+			var go = CreateStem(stem, leafData.shadowCastingMode, leafData.receiveShadows, (r) => Mathf.Max(1f - r, 0.2f), 0.05f, 0.0f);
 			go.transform.localPosition = segment.position;
 			go.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
 
@@ -220,8 +183,7 @@ namespace mattatz.ProceduralFlower {
 
     }
 
-    public class Florets {
-
+    class Florets {
         const float ANGLE = 137.5f * Mathf.Deg2Rad;
 
         // Vogel's formula : Generate patterns of florets 
@@ -234,8 +196,47 @@ namespace mattatz.ProceduralFlower {
             var r = c * Mathf.Sqrt(n);
             return new Vector3(Mathf.Cos(phi) * r, 0f, Mathf.Sin(phi) * r);
         }
-
     }
+
+	#region Define Data classes
+
+	[System.Serializable]
+	class ShapeData {
+		[SerializeField] PFShape shape;
+		public Material material = null;
+		[HideInInspector] public Mesh mesh;
+		public ShadowCastingMode shadowCastingMode = ShadowCastingMode.On;
+		public bool receiveShadows = true;
+
+		public void Init () {
+			mesh = shape.Build();
+			if(material == null) {
+				Debug.LogWarning("ShapeData material is null");
+			}
+		}
+	}
+
+	[System.Serializable]
+	class StemData {
+		[HideInInspector] public PFStem stem;
+
+		public Material material = null;
+		[SerializeField] int wresolution = 10;
+		[SerializeField] int hresolution = 8;
+		[SerializeField] float radius = 0.012f;
+		public float bend = 0.05f;
+		public ShadowCastingMode shadowCastingMode = ShadowCastingMode.On;
+		public bool receiveShadows = true;
+
+		public void Init () {
+			stem = new PFStem(wresolution, hresolution, radius);
+			if(material == null) {
+				Debug.LogWarning("StemData material is null");
+			}
+		}
+	}
+
+	#endregion
 
 }
 
