@@ -33,7 +33,7 @@ PFShape has control points and you can design its outline by the editor.
 
 ### PFCombine
 
-PFCombine enables to combine ProceduralFlower into one.
+PFCombine enables to combine meshes of ProceduralFlower into one mesh.
 
 ```cs
 
