@@ -4,11 +4,25 @@ using UnityEngine;
 
 namespace mattatz.ProceduralFlower {
 
+    [System.Serializable]
+    public enum PFPartType {
+        None,
+        Petal,
+        Leaf,
+        Stem
+    };
+
 	public class PFPart : MonoBehaviour {
 
 		const string PROPERTY_COLOR = "_Color2";
 		const string PROPERTY_BEND = "_Bend";
 		const string PROPERTY_T = "_T";
+
+        public PFPartType Type {
+            get {
+                return type;
+            }
+        }
 
 		MeshRenderer rnd {
 			get {
@@ -34,10 +48,10 @@ namespace mattatz.ProceduralFlower {
 		public List<PFSegment> children = new List<PFSegment>();
 
 		public readonly float EPSILON = 0.1f;
+        [SerializeField] PFPartType type = PFPartType.None;
 		float multiplySpeed = 1f;
 		float speed = 1f;
 
-		bool substance = true;
 		bool animating = false;
 		float ticker = 0f;
 
@@ -52,26 +66,26 @@ namespace mattatz.ProceduralFlower {
 			}
 		}
 
-		public void HasSubstance (bool flag) {
-			substance = flag;
-		}
+        public void SetType (PFPartType tp) {
+            type = tp;
+        }
 
 		public void Colorize (Color color) {
-			if(substance) {
+			if(type != PFPartType.None) {
 				block.SetColor(PROPERTY_COLOR, color);
 				rnd.SetPropertyBlock(block);			
 			}
 		}
 
 		public void Bend (float bend) {
-			if(substance) {
+			if(type != PFPartType.None) {
 				block.SetFloat(PROPERTY_BEND, bend);
 				rnd.SetPropertyBlock(block);			
 			}
 		}
 
 		public void Fade (float t) {
-			if(substance) {
+			if(type != PFPartType.None) {
 				block.SetFloat(PROPERTY_T, t);
 				rnd.SetPropertyBlock(block);			
 			}

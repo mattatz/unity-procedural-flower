@@ -9,7 +9,7 @@ namespace mattatz.ProceduralFlower.Demo {
 
         [SerializeField] ProceduralFlower flower;
 
-        void Start () {
+        void Awake () {
             var mesh = PFCombine.Combine(flower);
             GetComponent<MeshFilter>().sharedMesh = mesh;
         }

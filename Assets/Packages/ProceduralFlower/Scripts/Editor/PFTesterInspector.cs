@@ -32,7 +32,7 @@ namespace mattatz.ProceduralFlower.Demo {
 
 		void DisplayFlowerGUI (ProceduralFlower flower) {
 			flower.c = EditorGUILayout.Slider("Petal distance from center", flower.c, 0.001f, 0.05f);
-			flower.n = EditorGUILayout.IntSlider("# of petals", flower.n, 10, 200);
+			flower.n = EditorGUILayout.IntSlider("# of petals", flower.n, 4, 200);
 			flower.m = EditorGUILayout.IntSlider("# of buds", flower.m, 0, flower.n);
 			flower.scale = EditorGUILayout.Slider("Scale", flower.scale, 0.1f, 0.6f);
 			flower.min = EditorGUILayout.Slider("Min", flower.min, 0.0f, 1f);

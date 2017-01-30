@@ -89,12 +89,12 @@ namespace mattatz.ProceduralFlower {
 		GameObject CreateFlower (bool visible) {
             var floret = new Florets();
 
-			var bud = CreateShape("Bud", budData, visible);
-			var petal = CreateShape("Petal", petalData, visible);
+			var bud = CreateShape("Bud", PFPartType.Petal, budData, visible);
+			var petal = CreateShape("Petal", PFPartType.Petal, petalData, visible);
 
 			var flower = new GameObject("Flower");
 			var root = flower.AddComponent<PFPart>();
-			root.HasSubstance(false);
+            root.SetType(PFPartType.None);
 
             var inv = 1f / n;
             for(int i = 0; i < n; i++) {
@@ -136,7 +136,7 @@ namespace mattatz.ProceduralFlower {
 			return flower;
 		}
 
-		GameObject CreateBase (string name, Mesh mesh, Material material, ShadowCastingMode shadowCastingMode, bool receiveShadows, bool visible) {
+		GameObject CreateBase (string name, PFPartType type, Mesh mesh, Material material, ShadowCastingMode shadowCastingMode, bool receiveShadows, bool visible) {
 			var go = new GameObject(name);
 			go.AddComponent<MeshFilter>().mesh = mesh;
 
@@ -146,19 +146,20 @@ namespace mattatz.ProceduralFlower {
 			rnd.receiveShadows = receiveShadows;
 
 			var part = go.AddComponent<PFPart>();
+            part.SetType(type);
 			part.Fade(visible ? 1f + part.EPSILON : 0f);
 
 			return go;
 		}
 
-		GameObject CreateShape(string name, ShapeData data, bool visible) {
-			return CreateBase(name, data.mesh, data.material, data.shadowCastingMode, data.receiveShadows, visible);
+		GameObject CreateShape(string name, PFPartType type, ShapeData data, bool visible) {
+			return CreateBase(name, type, data.mesh, data.material, data.shadowCastingMode, data.receiveShadows, visible);
 		}
 
 		GameObject CreateStem(string name, PFStem stem, ShadowCastingMode shadowCastingMode, bool receiveShadows, Func<float, float> f, float height, float bend, bool visible) {
 			var controls = GetControls(4, height, bend);
 			var mesh = stem.Build(controls, f);
-			return CreateBase(name, mesh, stemData.material, stemData.shadowCastingMode, stemData.receiveShadows, visible);
+			return CreateBase(name, PFPartType.Stem, mesh, stemData.material, stemData.shadowCastingMode, stemData.receiveShadows, visible);
 		}
 
 		GameObject CreateLeaf (Point segment, Vector3 dir, float angle, bool visible) {
@@ -167,7 +168,7 @@ namespace mattatz.ProceduralFlower {
 			root.transform.localPosition = segment.position;
 			root.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
 
-			var leaf = CreateShape("Leaf", leafData, visible);
+			var leaf = CreateShape("Leaf", PFPartType.Leaf, leafData, visible);
 			leaf.transform.SetParent(root.transform, false);
 			leaf.transform.localPosition = stem.Tip.position;
 			leaf.transform.localRotation *= Quaternion.AngleAxis(rand.SampleRange(0f, 30f), Vector3.up);
