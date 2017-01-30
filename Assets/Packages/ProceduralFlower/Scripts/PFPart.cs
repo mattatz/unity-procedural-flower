@@ -31,7 +31,7 @@ namespace mattatz.ProceduralFlower {
 
 		MaterialPropertyBlock _block;
 		MeshRenderer _renderer;
-		List<PFAnimation> animations = new List<PFAnimation>();
+		public List<PFSegment> children = new List<PFSegment>();
 
 		public readonly float EPSILON = 0.1f;
 		float multiplySpeed = 1f;
@@ -45,7 +45,7 @@ namespace mattatz.ProceduralFlower {
 			if(animating) {
 				ticker += Time.deltaTime * multiplySpeed * speed;
 				Fade(ticker);
-				animations.ForEach(anim => anim.Animate(speed, ticker));
+				children.ForEach(anim => anim.Animate(speed, ticker));
 				if(ticker > 1f + EPSILON) {
 					animating = false;
 				}
@@ -82,7 +82,7 @@ namespace mattatz.ProceduralFlower {
 		}
 
 		public void Add (PFPart part, float ratio) {
-			animations.Add(new PFAnimation(part, ratio));
+			children.Add(new PFSegment(part, ratio));
 		}
 
 		public void Animate (float s = 1f) {
@@ -92,13 +92,13 @@ namespace mattatz.ProceduralFlower {
 		}
 
 		[System.Serializable]
-		class PFAnimation {
-			PFPart part;
-			float ratio;
+		public class PFSegment {
+			public readonly PFPart part;
+			public readonly float ratio;
 
 			bool animating = false;
 
-			public PFAnimation (PFPart p, float r) {
+			public PFSegment (PFPart p, float r) {
 				part = p;
 				ratio = r;
 			}
