@@ -159,7 +159,7 @@ namespace mattatz.ProceduralFlower {
 		GameObject CreateStem(string name, PFStem stem, ShadowCastingMode shadowCastingMode, bool receiveShadows, Func<float, float> f, float height, float bend, bool visible) {
 			var controls = GetControls(4, height, bend);
 			var mesh = stem.Build(controls, f);
-			return CreateBase(name, PFPartType.Stem, mesh, stemData.material, stemData.shadowCastingMode, stemData.receiveShadows, visible);
+			return CreateBase(name, PFPartType.Stover, mesh, stemData.material, stemData.shadowCastingMode, stemData.receiveShadows, visible);
 		}
 
 		GameObject CreateLeaf (Point segment, Vector3 dir, float angle, bool visible) {
@@ -168,7 +168,7 @@ namespace mattatz.ProceduralFlower {
 			root.transform.localPosition = segment.position;
 			root.transform.localRotation *= Quaternion.FromToRotation(Vector3.forward, dir) * Quaternion.AngleAxis(angle, Vector3.forward);
 
-			var leaf = CreateShape("Leaf", PFPartType.Leaf, leafData, visible);
+			var leaf = CreateShape("Leaf", PFPartType.Stover, leafData, visible);
 			leaf.transform.SetParent(root.transform, false);
 			leaf.transform.localPosition = stem.Tip.position;
 			leaf.transform.localRotation *= Quaternion.AngleAxis(rand.SampleRange(0f, 30f), Vector3.up);

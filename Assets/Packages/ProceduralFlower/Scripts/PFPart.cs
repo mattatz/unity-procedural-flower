@@ -8,8 +8,7 @@ namespace mattatz.ProceduralFlower {
     public enum PFPartType {
         None,
         Petal,
-        Leaf,
-        Stem
+        Stover
     };
 
 	public class PFPart : MonoBehaviour {
