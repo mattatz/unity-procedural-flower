@@ -23,13 +23,28 @@ ProceduralFlower can animate.
 
 ## Usage
 
+### PFShape
+
 ProceduralFlower needs 3 PFShape(ScriptableObject) for petal and leaf shapes.
 
 PFShape has control points and you can design its outline by the editor.
 
 ![Editor](https://raw.githubusercontent.com/mattatz/unity-procedural-flower/master/Captures/Editor.gif)
 
+### PFCombine
+
+PFCombine enables to combine ProceduralFlower into one.
+
+```cs
+
+public ProceduralFlower flower;
+void Start () {
+    var mesh = PFCombine.Combine(flower);
+    GetComponent<MeshFilter>().sharedMesh = mesh;
+}
+
+```
+
 ## Sources
 
 - The Algorithmic Beauty of Plants - http://algorithmicbotany.org/papers/#abop
-
